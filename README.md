@@ -1,4 +1,4 @@
-# ceph-raz
+# ceph-ranger-raz
 
 Local Ceph RADOS Gateway (RGW) with automated IAM provisioning for S3 and STS testing (e.g. Apache Ranger Raz).
 
