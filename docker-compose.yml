@@ -1,0 +1,45 @@
+networks:
+  ceph-net-auto:
+    driver: bridge
+
+volumes:
+  ceph-shared-auto:
+
+services:
+  ceph-demo-auto:
+    image: quay.io/ceph/demo:latest-squid
+    container_name: ceph-demo-auto
+    platform: linux/amd64
+    privileged: true
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+      - "5001:5000"
+    environment:
+      - MON_IP=127.0.0.1
+      - CEPH_PUBLIC_NETWORK=0.0.0.0/0
+      - CEPH_DEMO_UID=demo
+      - CEPH_DEMO_ACCESS_KEY=demokey
+      - CEPH_DEMO_SECRET_KEY=demosecret
+      - RGW_FRONTEND=beast
+      - RGW_BEAST_PORT=8080
+    networks:
+      - ceph-net-auto
+
+  ceph-auto-provisioner:
+    image: docker:cli
+    container_name: ceph-auto-provisioner
+    platform: linux/amd64
+    depends_on:
+      - ceph-demo-auto
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./init-ceph.sh:/init-ceph.sh:ro
+      - ceph-shared-auto:/shared
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache bash curl jq aws-cli grep sed
+        /init-ceph.sh
+    networks:
+      - ceph-net-auto
